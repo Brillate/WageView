@@ -77,12 +77,12 @@ const SelectContent = React.forwardRef<
       ref={ref}
       className={cn(
         "relative z-50 max-h-96 min-w-[8rem] overflow-hidden rounded-md border bg-popover text-popover-foreground shadow-md",
-        "data-[state=open]:animate-in data-[state=open]:fade-in-0",
+        "data-[state=open]:fade-in-0", // Removed animate-in
         "data-[side=bottom]:data-[state=open]:slide-in-from-top-2",
         "data-[side=left]:data-[state=open]:slide-in-from-right-2",
         "data-[side=right]:data-[state=open]:slide-in-from-left-2",
         "data-[side=top]:data-[state=open]:slide-in-from-bottom-2",
-        "data-[state=closed]:animate-out data-[state=closed]:fade-out-0",
+        "data-[state=closed]:fade-out-0", // Removed animate-out
         "data-[side=bottom]:data-[state=closed]:slide-out-to-top-2",
         "data-[side=left]:data-[state=closed]:slide-out-to-right-2",
         "data-[side=right]:data-[state=closed]:slide-out-to-left-2",
