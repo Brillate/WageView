@@ -67,8 +67,8 @@ export function EarningsDisplay({ hourlyWage, shiftStartTime }: EarningsDisplayP
   const formattedEarnings = currentEarnings.toLocaleString('en-US', {
     style: 'currency',
     currency: 'USD',
-    minimumFractionDigits: 2, // Show cents even if zero
-    maximumFractionDigits: 4, // Show more precision during accumulation
+    minimumFractionDigits: 2, 
+    maximumFractionDigits: 2, // Changed from 4 to 2
   });
 
   return (
