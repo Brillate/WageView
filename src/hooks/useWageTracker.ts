@@ -1,7 +1,7 @@
 
 "use client";
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { useToast } from "@/hooks/use-toast";
 import { format, formatDistanceStrict } from 'date-fns';
 
@@ -22,10 +22,18 @@ export interface ShiftSummary {
   actualEarnings: number;
 }
 
+export interface EarningsDataPoint {
+  seconds: number;
+  earnings: number;
+}
+
 const HOURS_PER_DAY = 8;
 const HOURS_PER_WEEK = 40;
 const HOURS_PER_MONTH = (52 * HOURS_PER_WEEK) / 12; 
 const HOURS_PER_YEAR = 52 * HOURS_PER_WEEK; 
+
+const MAX_GRAPH_POINTS = 60; // e.g., 60 points for 2 minutes of data if interval is 2s
+const GRAPH_UPDATE_INTERVAL = 2000; // 2 seconds
 
 function calculateEffectiveHourlyWage(amount: number, period: PayPeriod): number {
   if (amount <= 0) return 0;
@@ -53,8 +61,10 @@ export function useWageTracker() {
   const [shiftStartTime, setShiftStartTimeState] = useState<number | null>(null);
   const [isShiftActive, setIsShiftActiveState] = useState<boolean>(false);
   const [lastShiftSummary, setLastShiftSummaryState] = useState<ShiftSummary | null>(null);
+  const [earningsGraphData, setEarningsGraphData] = useState<EarningsDataPoint[]>([]);
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const { toast } = useToast();
+  const graphUpdateIntervalRef = useRef<NodeJS.Timeout | null>(null);
 
   useEffect(() => {
     try {
@@ -118,6 +128,43 @@ export function useWageTracker() {
     }
   }, []);
 
+
+  useEffect(() => {
+    if (isShiftActive && shiftStartTime && effectiveHourlyWage && effectiveHourlyWage > 0) {
+      setEarningsGraphData([{ seconds: 0, earnings: 0 }]); // Initialize graph data
+
+      graphUpdateIntervalRef.current = setInterval(() => {
+        const now = Date.now();
+        const elapsedMillis = now - shiftStartTime;
+        if (elapsedMillis < 0) return;
+
+        const elapsedSeconds = elapsedMillis / 1000;
+        const currentEarnings = (elapsedMillis / (1000 * 60 * 60)) * effectiveHourlyWage;
+        
+        setEarningsGraphData(prevData => {
+          const newData = [...prevData, { seconds: elapsedSeconds, earnings: currentEarnings }];
+          return newData.slice(-MAX_GRAPH_POINTS);
+        });
+      }, GRAPH_UPDATE_INTERVAL);
+    } else {
+      if (graphUpdateIntervalRef.current) {
+        clearInterval(graphUpdateIntervalRef.current);
+        graphUpdateIntervalRef.current = null;
+      }
+      if (!isShiftActive) { // Clear graph data only if shift is not active
+        setEarningsGraphData([]);
+      }
+    }
+
+    return () => {
+      if (graphUpdateIntervalRef.current) {
+        clearInterval(graphUpdateIntervalRef.current);
+        graphUpdateIntervalRef.current = null;
+      }
+    };
+  }, [isShiftActive, shiftStartTime, effectiveHourlyWage]);
+
+
   const startShift = useCallback(() => {
     if (!effectiveHourlyWage || effectiveHourlyWage <= 0) {
       toast({ title: "Set Wage", description: "Please set a valid wage and pay period before starting a shift.", variant: "destructive" });
@@ -126,6 +173,8 @@ export function useWageTracker() {
     const now = Date.now();
     setShiftStartTimeState(now);
     setIsShiftActiveState(true);
+    setEarningsGraphData([{ seconds: 0, earnings: 0 }]); // Initial point for graph
+
     try {
       localStorage.setItem(SHIFT_START_TIME_KEY, now.toString());
       localStorage.setItem(IS_SHIFT_ACTIVE_KEY, 'true');
@@ -153,6 +202,7 @@ export function useWageTracker() {
     setLastShiftSummaryState(summary);
     setIsShiftActiveState(false);
     setShiftStartTimeState(null);
+    // setEarningsGraphData([]); // Clear graph data on shift end is handled by useEffect
 
     try {
       localStorage.setItem(LAST_SHIFT_SUMMARY_KEY, JSON.stringify(summary));
@@ -186,6 +236,7 @@ export function useWageTracker() {
     endShift,
     lastShiftSummary,
     clearLastShiftSummary,
+    earningsGraphData,
     isLoading,
   };
 }

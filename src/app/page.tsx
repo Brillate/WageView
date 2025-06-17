@@ -7,6 +7,7 @@ import { WageInputForm } from '@/components/WageInputForm';
 import { EarningsDisplay } from '@/components/EarningsDisplay';
 import { ShiftControls } from '@/components/ShiftControls';
 import { ShiftSummaryCard } from '@/components/ShiftSummaryCard';
+import { EarningsGraph } from '@/components/EarningsGraph'; // Import the new graph component
 import { Skeleton } from '@/components/ui/skeleton';
 import { Card, CardContent } from '@/components/ui/card';
 
@@ -22,6 +23,7 @@ export default function WageViewPage() {
     endShift,
     lastShiftSummary,
     clearLastShiftSummary,
+    earningsGraphData, // Get graph data from hook
     isLoading,
   } = useWageTracker();
 
@@ -35,6 +37,7 @@ export default function WageViewPage() {
               <Skeleton className="h-10 w-full" />
               <Skeleton className="h-20 w-full" />
               <Skeleton className="h-12 w-1/2 mx-auto" />
+              <Skeleton className="h-40 w-full" /> 
             </CardContent>
           </Card>
         </div>
@@ -56,7 +59,10 @@ export default function WageViewPage() {
           />
           
           {isShiftActive && shiftStartTime && hourlyWage && hourlyWage > 0 && (
-            <EarningsDisplay hourlyWage={hourlyWage} shiftStartTime={shiftStartTime} />
+            <>
+              <EarningsDisplay hourlyWage={hourlyWage} shiftStartTime={shiftStartTime} />
+              <EarningsGraph data={earningsGraphData} /> 
+            </>
           )}
 
           <ShiftControls
