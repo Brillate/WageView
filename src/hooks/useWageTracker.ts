@@ -32,7 +32,6 @@ const HOURS_PER_WEEK = 40;
 const HOURS_PER_MONTH = (52 * HOURS_PER_WEEK) / 12; 
 const HOURS_PER_YEAR = 52 * HOURS_PER_WEEK; 
 
-const MAX_GRAPH_POINTS = 60; // e.g., 60 points for 2 minutes of data if interval is 2s
 const GRAPH_UPDATE_INTERVAL = 2000; // 2 seconds
 
 function calculateEffectiveHourlyWage(amount: number, period: PayPeriod): number {
@@ -131,7 +130,20 @@ export function useWageTracker() {
 
   useEffect(() => {
     if (isShiftActive && shiftStartTime && effectiveHourlyWage && effectiveHourlyWage > 0) {
-      setEarningsGraphData([{ seconds: 0, earnings: 0 }]); // Initialize graph data
+      // Initialize graph data if it's empty or if the shift start time changed
+      // This ensures that if a shift was active, page reloaded, data is populated correctly
+      if (earningsGraphData.length === 0) {
+         const now = Date.now();
+         const elapsedMillis = now - shiftStartTime;
+         if (elapsedMillis >= 0) {
+            const initialElapsedSeconds = elapsedMillis / 1000;
+            const initialCurrentEarnings = (elapsedMillis / (1000 * 60 * 60)) * effectiveHourlyWage;
+            setEarningsGraphData([{ seconds: 0, earnings: 0 }, {seconds: initialElapsedSeconds, earnings: initialCurrentEarnings}]);
+         } else {
+           setEarningsGraphData([{ seconds: 0, earnings: 0 }]);
+         }
+      }
+
 
       graphUpdateIntervalRef.current = setInterval(() => {
         const now = Date.now();
@@ -142,8 +154,8 @@ export function useWageTracker() {
         const currentEarnings = (elapsedMillis / (1000 * 60 * 60)) * effectiveHourlyWage;
         
         setEarningsGraphData(prevData => {
-          const newData = [...prevData, { seconds: elapsedSeconds, earnings: currentEarnings }];
-          return newData.slice(-MAX_GRAPH_POINTS);
+          // Add new data point, do not slice to keep full history for the shift
+          return [...prevData, { seconds: elapsedSeconds, earnings: currentEarnings }];
         });
       }, GRAPH_UPDATE_INTERVAL);
     } else {
@@ -151,9 +163,8 @@ export function useWageTracker() {
         clearInterval(graphUpdateIntervalRef.current);
         graphUpdateIntervalRef.current = null;
       }
-      if (!isShiftActive) { // Clear graph data only if shift is not active
-        setEarningsGraphData([]);
-      }
+      // Don't clear graph data here if shift just ended, allow summary to use it.
+      // It will be cleared/re-initialized when a new shift starts.
     }
 
     return () => {
@@ -162,6 +173,7 @@ export function useWageTracker() {
         graphUpdateIntervalRef.current = null;
       }
     };
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isShiftActive, shiftStartTime, effectiveHourlyWage]);
 
 
@@ -201,14 +213,16 @@ export function useWageTracker() {
     
     setLastShiftSummaryState(summary);
     setIsShiftActiveState(false);
-    setShiftStartTimeState(null);
-    // setEarningsGraphData([]); // Clear graph data on shift end is handled by useEffect
+    // Do not clear shiftStartTimeState immediately, allow UI to update if needed
+    // setShiftStartTimeState(null); 
+    // Graph data is not cleared here, it resets on next shift start.
 
     try {
       localStorage.setItem(LAST_SHIFT_SUMMARY_KEY, JSON.stringify(summary));
       localStorage.setItem(IS_SHIFT_ACTIVE_KEY, 'false');
       localStorage.removeItem(SHIFT_START_TIME_KEY);
-    } catch (error) {
+    } catch (error)
+{
       console.error("Failed to save shift end data to localStorage", error);
     }
     toast({ title: "Shift Ended", description: `You earned ${summary.earnings}.` });
