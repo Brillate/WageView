@@ -22,7 +22,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
-import { DollarSign, CheckCircle, Clock } from "lucide-react";
+import { DollarSign, CheckCircle } from "lucide-react";
 import { useEffect, useState } from "react";
 import { cn } from "@/lib/utils";
 import type { PayPeriod } from '@/hooks/useWageTracker';
@@ -76,8 +76,6 @@ export function WageInputForm({ initialAmount, initialPayPeriod, onWageConfigCha
     setIsWageSet(true); 
   }
   
-  const currentPeriodLabel = payPeriods.find(p => p.value === form.watch('period'))?.label.toLowerCase() || 'period';
-
   return (
     <Card className="w-full shadow-lg">
       <CardHeader>
@@ -143,14 +141,14 @@ export function WageInputForm({ initialAmount, initialPayPeriod, onWageConfigCha
               />
             </div>
             <Button type="submit" disabled={disabled || !form.formState.isValid} aria-label="Set Pay Configuration" className="w-full sm:w-auto">
-              {isWageSet && !disabled ? <CheckCircle className="h-5 w-5"/> : (disabled ? "Locked" : "Set Pay")}
+              {disabled ? "Locked" : (isWageSet ? "Update Pay" : "Set Pay")}
             </Button>
           </form>
         </Form>
-        {isWageSet && disabled && effectiveHourlyWage && (
+        {isWageSet && disabled && effectiveHourlyWage && initialAmount && (
           <p className="mt-4 text-sm text-green-400 flex items-center">
             <CheckCircle className="mr-2 h-5 w-5" /> 
-            Pay set: ${initialAmount?.toFixed(2)} per {initialPayPeriod}. (Effective: ${effectiveHourlyWage.toFixed(2)}/hr). End current shift to change.
+            Pay set: ${initialAmount.toFixed(2)} per {initialPayPeriod}. (Effective: ${effectiveHourlyWage.toFixed(2)}/hr). End current shift to change.
           </p>
         )}
       </CardContent>
