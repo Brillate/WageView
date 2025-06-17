@@ -7,7 +7,7 @@ import { WageInputForm } from '@/components/WageInputForm';
 import { EarningsDisplay } from '@/components/EarningsDisplay';
 import { ShiftControls } from '@/components/ShiftControls';
 import { ShiftSummaryCard } from '@/components/ShiftSummaryCard';
-import { EarningsGraph } from '@/components/EarningsGraph'; // Import the new graph component
+import { EarningsGraph } from '@/components/EarningsGraph';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Card, CardContent } from '@/components/ui/card';
 
@@ -23,7 +23,7 @@ export default function WageViewPage() {
     endShift,
     lastShiftSummary,
     clearLastShiftSummary,
-    earningsGraphData, // Get graph data from hook
+    earningsGraphData,
     isLoading,
   } = useWageTracker();
 
@@ -54,7 +54,6 @@ export default function WageViewPage() {
             initialAmount={inputAmount}
             initialPayPeriod={payPeriod}
             onWageConfigChange={setWageConfig}
-            disabled={isShiftActive}
             effectiveHourlyWage={hourlyWage}
           />
           

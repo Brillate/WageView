@@ -48,11 +48,10 @@ interface WageInputFormProps {
   initialAmount: number | null;
   initialPayPeriod: PayPeriod;
   onWageConfigChange: (amount: number, period: PayPeriod) => void;
-  disabled: boolean;
   effectiveHourlyWage: number | null;
 }
 
-export function WageInputForm({ initialAmount, initialPayPeriod, onWageConfigChange, disabled, effectiveHourlyWage }: WageInputFormProps) {
+export function WageInputForm({ initialAmount, initialPayPeriod, onWageConfigChange, effectiveHourlyWage }: WageInputFormProps) {
   const [isWageSet, setIsWageSet] = useState(!!effectiveHourlyWage && effectiveHourlyWage > 0);
   const [isConfirming, setIsConfirming] = useState(false);
 
@@ -85,6 +84,7 @@ export function WageInputForm({ initialAmount, initialPayPeriod, onWageConfigCha
     onWageConfigChange(data.amount, data.period as PayPeriod);
     setIsWageSet(true); 
     setIsConfirming(true);
+    form.reset(data); // Reset dirty state
   }
   
   return (
@@ -94,7 +94,7 @@ export function WageInputForm({ initialAmount, initialPayPeriod, onWageConfigCha
           <DollarSign className="mr-2 h-6 w-6 text-primary" /> Pay Configuration
         </CardTitle>
         <CardDescription>
-          {isWageSet && !disabled ? "Update your pay configuration below." : "Enter your pay amount and select the period."}
+          {isWageSet ? "Update your pay configuration below." : "Enter your pay amount and select the period."}
         </CardDescription>
       </CardHeader>
       <CardContent>
@@ -114,7 +114,7 @@ export function WageInputForm({ initialAmount, initialPayPeriod, onWageConfigCha
                         step="0.01"
                         placeholder="e.g., 25.50"
                         {...field}
-                        disabled={disabled || isConfirming}
+                        disabled={isConfirming}
                         className={cn("text-lg", "no-spinners")}
                       />
                     </FormControl>
@@ -131,7 +131,7 @@ export function WageInputForm({ initialAmount, initialPayPeriod, onWageConfigCha
                     <Select
                       onValueChange={field.onChange}
                       defaultValue={field.value}
-                      disabled={disabled || isConfirming}
+                      disabled={isConfirming}
                     >
                       <FormControl>
                         <SelectTrigger id="period" className="text-lg">
@@ -154,24 +154,18 @@ export function WageInputForm({ initialAmount, initialPayPeriod, onWageConfigCha
             <div className="flex justify-center">
               <Button 
                 type="submit" 
-                disabled={disabled || !form.formState.isDirty || !form.formState.isValid || isConfirming} 
+                disabled={!form.formState.isDirty || !form.formState.isValid || isConfirming} 
                 aria-label="Set Pay Configuration" 
                 className="w-full sm:w-auto"
               >
-                {disabled ? "Locked" : 
-                  isConfirming ? "Saved!" :
+                {isConfirming ? "Saved!" :
                   (isWageSet ? "Update Pay" : "Set Pay")
                 }
               </Button>
             </div>
           </form>
         </Form>
-        {isWageSet && disabled && effectiveHourlyWage && initialAmount && (
-          <p className="mt-4 text-sm text-green-400">
-            Pay set: ${initialAmount.toFixed(2)} per {initialPayPeriod}. (Effective: ${effectiveHourlyWage.toFixed(2)}/hr). End current shift to change.
-          </p>
-        )}
-         {!isWageSet && !disabled && !effectiveHourlyWage && (
+         {!isWageSet && !effectiveHourlyWage && (
             <p className="mt-4 text-sm text-center text-muted-foreground">
                 Enter your pay and period to begin.
             </p>
