@@ -22,7 +22,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
-import { DollarSign, CheckCircle } from "lucide-react";
+import { DollarSign } from "lucide-react";
 import { useEffect, useState } from "react";
 import { cn } from "@/lib/utils";
 import type { PayPeriod } from '@/hooks/useWageTracker';
@@ -127,7 +127,7 @@ export function WageInputForm({ initialAmount, initialPayPeriod, onWageConfigCha
                           <SelectValue placeholder="Select period" />
                         </SelectTrigger>
                       </FormControl>
-                      <SelectContent>
+                      <SelectContent style={{ minWidth: '12rem' }}>
                         {payPeriods.map(p => (
                           <SelectItem key={p.value} value={p.value} className="text-lg">
                             {p.label}
@@ -146,8 +146,7 @@ export function WageInputForm({ initialAmount, initialPayPeriod, onWageConfigCha
           </form>
         </Form>
         {isWageSet && disabled && effectiveHourlyWage && initialAmount && (
-          <p className="mt-4 text-sm text-green-400 flex items-center">
-            <CheckCircle className="mr-2 h-5 w-5" /> 
+          <p className="mt-4 text-sm text-green-400">
             Pay set: ${initialAmount.toFixed(2)} per {initialPayPeriod}. (Effective: ${effectiveHourlyWage.toFixed(2)}/hr). End current shift to change.
           </p>
         )}
