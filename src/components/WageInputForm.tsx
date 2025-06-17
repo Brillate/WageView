@@ -17,6 +17,7 @@ import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { DollarSign, CheckCircle } from "lucide-react";
 import { useEffect, useState } from "react";
+import { cn } from "@/lib/utils";
 
 const wageFormSchema = z.object({
   wage: z.coerce.number().positive({ message: "Wage must be a positive number." }).min(0.01, { message: "Wage must be at least $0.01." }),
@@ -80,7 +81,7 @@ export function WageInputForm({ initialWage, onWageChange, disabled }: WageInput
                         placeholder="e.g., 25.50"
                         {...field}
                         disabled={disabled}
-                        className="text-lg"
+                        className={cn("text-lg", "no-spinners")}
                       />
                     </FormControl>
                     <Button type="submit" disabled={disabled || !form.formState.isValid} aria-label="Set Wage">

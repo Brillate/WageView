@@ -80,3 +80,15 @@ body, .bg-background, .text-foreground, .bg-card, .text-card-foreground, .border
   transition-duration: 300ms;
   transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
 }
+
+/* Hide spinners on number inputs */
+@layer utilities {
+  .no-spinners::-webkit-outer-spin-button,
+  .no-spinners::-webkit-inner-spin-button {
+    -webkit-appearance: none;
+    margin: 0;
+  }
+  .no-spinners {
+    -moz-appearance: textfield; /* Firefox */
+  }
+}
