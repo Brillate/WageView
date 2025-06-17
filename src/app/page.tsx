@@ -21,6 +21,7 @@ export default function WageViewPage() {
     startShift,
     endShift,
     lastShiftSummary,
+    clearLastShiftSummary,
     isLoading,
   } = useWageTracker();
 
@@ -45,7 +46,7 @@ export default function WageViewPage() {
     <div className="flex flex-col min-h-screen font-body selection:bg-primary/20">
       <div className="flex-grow flex flex-col items-center justify-center container mx-auto p-4">
         <AppHeader />
-        <main className="w-full max-w-lg space-y-6 mt-8 mb-8"> {/* Adjusted margins for main */}
+        <main className="w-full max-w-lg space-y-6 mt-8 mb-8">
           <WageInputForm
             initialAmount={inputAmount}
             initialPayPeriod={payPeriod}
@@ -66,7 +67,7 @@ export default function WageViewPage() {
           />
 
           {lastShiftSummary && (
-            <ShiftSummaryCard summary={lastShiftSummary} />
+            <ShiftSummaryCard summary={lastShiftSummary} onClearSummary={clearLastShiftSummary} />
           )}
 
           {!isShiftActive && !lastShiftSummary && hourlyWage && hourlyWage > 0 && (

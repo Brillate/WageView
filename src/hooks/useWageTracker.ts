@@ -9,23 +9,23 @@ export type PayPeriod = 'hourly' | 'daily' | 'weekly' | 'monthly' | 'annually';
 
 const INPUT_AMOUNT_KEY = 'realtimeWageView_inputAmount';
 const PAY_PERIOD_KEY = 'realtimeWageView_payPeriod';
-const EFFECTIVE_HOURLY_WAGE_KEY = 'realtimeWageView_effectiveHourlyWage'; // New key for clarity
+const EFFECTIVE_HOURLY_WAGE_KEY = 'realtimeWageView_effectiveHourlyWage';
 const SHIFT_START_TIME_KEY = 'realtimeWageView_shiftStartTime';
 const IS_SHIFT_ACTIVE_KEY = 'realtimeWageView_isShiftActive';
 const LAST_SHIFT_SUMMARY_KEY = 'realtimeWageView_lastShiftSummary';
 
 export interface ShiftSummary {
+  startedAt: string;
+  endedAt: string;
   duration: string;
   earnings: string;
-  endedAt: string;
   actualEarnings: number;
 }
 
-// Constants for conversions
 const HOURS_PER_DAY = 8;
 const HOURS_PER_WEEK = 40;
-const HOURS_PER_MONTH = (52 * HOURS_PER_WEEK) / 12; // Approx 173.333...
-const HOURS_PER_YEAR = 52 * HOURS_PER_WEEK; // 2080
+const HOURS_PER_MONTH = (52 * HOURS_PER_WEEK) / 12; 
+const HOURS_PER_YEAR = 52 * HOURS_PER_WEEK; 
 
 function calculateEffectiveHourlyWage(amount: number, period: PayPeriod): number {
   if (amount <= 0) return 0;
@@ -73,14 +73,12 @@ export function useWageTracker() {
       if (loadedAmount !== null) {
         setEffectiveHourlyWageState(calculateEffectiveHourlyWage(loadedAmount, loadedPeriod));
       } else {
-         // Attempt to load old hourlyWage if new keys are not present
         const oldStoredHourlyWage = localStorage.getItem('realtimeWageView_hourlyWage');
         if (oldStoredHourlyWage) {
             const oldWage = parseFloat(oldStoredHourlyWage);
             setInputAmountState(oldWage);
             setPayPeriodState('hourly');
             setEffectiveHourlyWageState(oldWage);
-            // Optionally save these under new keys
             localStorage.setItem(INPUT_AMOUNT_KEY, oldWage.toString());
             localStorage.setItem(PAY_PERIOD_KEY, 'hourly');
             localStorage.setItem(EFFECTIVE_HOURLY_WAGE_KEY, oldWage.toString());
@@ -145,9 +143,10 @@ export function useWageTracker() {
     const earned = (durationMillis / (1000 * 60 * 60)) * effectiveHourlyWage;
 
     const summary: ShiftSummary = {
-      duration: formatDistanceStrict(shiftStartTime, now, { unit: 'second' }),
-      earnings: earned.toLocaleString('en-US', { style: 'currency', currency: 'USD' }),
+      startedAt: format(shiftStartTime, 'Pp'),
       endedAt: format(now, 'Pp'),
+      duration: formatDistanceStrict(shiftStartTime, now, { roundingMethod: 'floor' }),
+      earnings: earned.toLocaleString('en-US', { style: 'currency', currency: 'USD' }),
       actualEarnings: earned,
     };
     
@@ -165,16 +164,28 @@ export function useWageTracker() {
     toast({ title: "Shift Ended", description: `You earned ${summary.earnings}.` });
   }, [shiftStartTime, effectiveHourlyWage, toast]);
 
+  const clearLastShiftSummary = useCallback(() => {
+    setLastShiftSummaryState(null);
+    try {
+      localStorage.removeItem(LAST_SHIFT_SUMMARY_KEY);
+      toast({ title: "Summary Cleared", description: "Your last shift summary has been cleared." });
+    } catch (error) {
+      console.error("Failed to clear last shift summary from localStorage", error);
+      toast({ title: "Error", description: "Could not clear shift summary.", variant: "destructive" });
+    }
+  }, [toast]);
+
   return {
     inputAmount,
     payPeriod,
-    hourlyWage: effectiveHourlyWage, // Expose effectiveHourlyWage as hourlyWage for consumers
+    hourlyWage: effectiveHourlyWage,
     setWageConfig,
     shiftStartTime,
     isShiftActive,
     startShift,
     endShift,
     lastShiftSummary,
+    clearLastShiftSummary,
     isLoading,
   };
 }
