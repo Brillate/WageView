@@ -140,9 +140,11 @@ export function WageInputForm({ initialAmount, initialPayPeriod, onWageConfigCha
                 )}
               />
             </div>
-            <Button type="submit" disabled={disabled || !form.formState.isValid} aria-label="Set Pay Configuration" className="w-full sm:w-auto">
-              {disabled ? "Locked" : (isWageSet ? "Update Pay" : "Set Pay")}
-            </Button>
+            <div className="flex justify-center">
+              <Button type="submit" disabled={disabled || !form.formState.isValid} aria-label="Set Pay Configuration" className="w-full sm:w-auto">
+                {disabled ? "Locked" : (isWageSet ? "Update Pay" : "Set Pay")}
+              </Button>
+            </div>
           </form>
         </Form>
         {isWageSet && disabled && effectiveHourlyWage && initialAmount && (
