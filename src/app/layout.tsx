@@ -29,7 +29,7 @@ export default function RootLayout({
       </head>
       <body className={`${inter.variable} font-body antialiased bg-background text-foreground`}>
         <ThemeProvider
-          defaultTheme="system"
+          defaultTheme="light" // Changed from "system" to "light"
           storageKey="realtime-wageview-theme"
         >
           {children}

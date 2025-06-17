@@ -4,7 +4,7 @@
 import type { FC, ReactNode } from 'react';
 import { createContext, useContext, useEffect, useState, useCallback } from 'react';
 
-type Theme = "light" | "dark" | "system";
+type Theme = "light" | "dark";
 
 interface ThemeProviderProps {
   children: ReactNode;
@@ -14,13 +14,11 @@ interface ThemeProviderProps {
 
 interface ThemeProviderState {
   theme: Theme;
-  resolvedTheme: "light" | "dark";
   setTheme: (theme: Theme) => void;
 }
 
 const initialState: ThemeProviderState = {
-  theme: "system",
-  resolvedTheme: "light", // Default to light before hydration
+  theme: "light",
   setTheme: () => null,
 };
 
@@ -28,30 +26,29 @@ const ThemeProviderContext = createContext<ThemeProviderState>(initialState);
 
 export const ThemeProvider: FC<ThemeProviderProps> = ({
   children,
-  defaultTheme = "system",
-  storageKey = "vite-ui-theme",
+  defaultTheme = "light",
+  storageKey = "realtime-wageview-theme",
 }) => {
   const [theme, setThemeState] = useState<Theme>(() => {
     if (typeof window === 'undefined') {
       return defaultTheme;
     }
     try {
-      const storedTheme = window.localStorage.getItem(storageKey) as Theme | null;
-      return storedTheme || defaultTheme;
+      const storedValue = window.localStorage.getItem(storageKey);
+      if (storedValue === "light" || storedValue === "dark") {
+        return storedValue as Theme;
+      }
+      // Handle migration from old "system" value or no value
+      if (storedValue === "system") {
+        const systemPrefersDark = window.matchMedia("(prefers-color-scheme: dark)").matches;
+        return systemPrefersDark ? "dark" : "light";
+      }
+      // No valid stored value or an unexpected value, use defaultTheme.
+      return defaultTheme;
     } catch (e) {
       console.warn(`Failed to read theme from localStorage (key: ${storageKey})`, e);
       return defaultTheme;
     }
-  });
-
-  const [resolvedTheme, setResolvedTheme] = useState<"light" | "dark">(() => {
-    if (theme === "system") {
-      if (typeof window !== 'undefined') {
-        return window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light";
-      }
-      return "light"; // SSR fallback
-    }
-    return theme;
   });
 
   const setTheme = useCallback((newTheme: Theme) => {
@@ -65,35 +62,12 @@ export const ThemeProvider: FC<ThemeProviderProps> = ({
 
   useEffect(() => {
     const root = window.document.documentElement;
-    const currentTheme = theme === "system"
-      ? (window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light")
-      : theme;
-
     root.classList.remove("light", "dark");
-    root.classList.add(currentTheme);
-    setResolvedTheme(currentTheme);
+    root.classList.add(theme);
   }, [theme]);
-
-  useEffect(() => {
-    if (theme !== "system") {
-      return;
-    }
-
-    const mediaQuery = window.matchMedia("(prefers-color-scheme: dark)");
-    const handleChange = () => {
-      const newResolvedTheme = mediaQuery.matches ? "dark" : "light";
-      setResolvedTheme(newResolvedTheme);
-      window.document.documentElement.classList.remove("light", "dark");
-      window.document.documentElement.classList.add(newResolvedTheme);
-    };
-
-    mediaQuery.addEventListener("change", handleChange);
-    return () => mediaQuery.removeEventListener("change", handleChange);
-  }, [theme]);
-
 
   return (
-    <ThemeProviderContext.Provider value={{ theme, resolvedTheme, setTheme }}>
+    <ThemeProviderContext.Provider value={{ theme, setTheme }}>
       {children}
     </ThemeProviderContext.Provider>
   );

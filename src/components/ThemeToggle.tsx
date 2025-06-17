@@ -13,7 +13,7 @@ import {
 import { useEffect, useState } from "react"
 
 export function ThemeToggle() {
-  const { theme, setTheme, resolvedTheme } = useTheme()
+  const { theme, setTheme } = useTheme() // Removed resolvedTheme
   const [mounted, setMounted] = useState(false)
 
   useEffect(() => {
@@ -35,7 +35,7 @@ export function ThemeToggle() {
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
         <Button variant="outline" size="icon" className="h-9 w-9">
-          {resolvedTheme === 'dark' ? (
+          {theme === 'dark' ? ( // Use theme directly
             <Moon className="h-[1.2rem] w-[1.2rem] transition-all" />
           ) : (
             <Sun className="h-[1.2rem] w-[1.2rem] transition-all" />
@@ -50,9 +50,7 @@ export function ThemeToggle() {
         <DropdownMenuItem onClick={() => setTheme("dark")} disabled={theme === "dark"}>
           Dark
         </DropdownMenuItem>
-        <DropdownMenuItem onClick={() => setTheme("system")} disabled={theme === "system"}>
-          System
-        </DropdownMenuItem>
+        {/* System DropdownMenuItem removed */}
       </DropdownMenuContent>
     </DropdownMenu>
   )
