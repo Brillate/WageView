@@ -12,8 +12,10 @@ import { Card, CardContent } from '@/components/ui/card';
 
 export default function WageViewPage() {
   const {
-    hourlyWage,
-    setHourlyWage,
+    inputAmount,
+    payPeriod,
+    hourlyWage, // This is the effective hourly wage
+    setWageConfig,
     isShiftActive,
     shiftStartTime,
     startShift,
@@ -42,12 +44,14 @@ export default function WageViewPage() {
       <AppHeader />
       <main className="w-full max-w-lg space-y-6 mt-2 mb-8">
         <WageInputForm
-          initialWage={hourlyWage}
-          onWageChange={setHourlyWage}
+          initialAmount={inputAmount}
+          initialPayPeriod={payPeriod}
+          onWageConfigChange={setWageConfig}
           disabled={isShiftActive}
+          effectiveHourlyWage={hourlyWage}
         />
         
-        {isShiftActive && shiftStartTime && hourlyWage && (
+        {isShiftActive && shiftStartTime && hourlyWage && hourlyWage > 0 && (
           <EarningsDisplay hourlyWage={hourlyWage} shiftStartTime={shiftStartTime} />
         )}
 
