@@ -8,9 +8,16 @@ import { TrendingUp, Clock } from 'lucide-react';
 interface EarningsDisplayProps {
   hourlyWage: number | null;
   shiftStartTime: number | null;
+  accumulatedEarningsAtLastChange?: number; // Optional for backward compatibility if not immediately passed
+  timestampOfLastWageChange?: number | null; // Optional
 }
 
-export function EarningsDisplay({ hourlyWage, shiftStartTime }: EarningsDisplayProps) {
+export function EarningsDisplay({ 
+  hourlyWage, 
+  shiftStartTime, 
+  accumulatedEarningsAtLastChange = 0, 
+  timestampOfLastWageChange = null 
+}: EarningsDisplayProps) {
   const [currentEarnings, setCurrentEarnings] = useState<number>(0);
   const [elapsedTime, setElapsedTime] = useState<string>("00:00:00");
 
@@ -23,52 +30,77 @@ export function EarningsDisplay({ hourlyWage, shiftStartTime }: EarningsDisplayP
 
     const intervalId = setInterval(() => {
       const now = Date.now();
-      const diffMillis = now - shiftStartTime;
       
-      if (diffMillis < 0) { // Should not happen if logic is correct
-        setCurrentEarnings(0);
+      // Calculate elapsed time based on original shift start
+      const diffMillisTotal = now - shiftStartTime;
+      if (diffMillisTotal < 0) {
         setElapsedTime("00:00:00");
-        return;
+      } else {
+        const diffSecondsTotal = Math.floor(diffMillisTotal / 1000);
+        const hours = Math.floor(diffSecondsTotal / 3600);
+        const minutes = Math.floor((diffSecondsTotal % 3600) / 60);
+        const seconds = diffSecondsTotal % 60;
+        setElapsedTime(
+          `${String(hours).padStart(2, '0')}:${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`
+        );
       }
 
-      const diffSecondsTotal = Math.floor(diffMillis / 1000);
+      // Calculate current earnings considering potential mid-shift wage changes
+      let newCurrentEarnings = 0;
+      const effectiveCalculationStartTime = timestampOfLastWageChange || shiftStartTime;
+      const baseEarnings = timestampOfLastWageChange ? accumulatedEarningsAtLastChange : 0;
       
-      const hours = Math.floor(diffSecondsTotal / 3600);
-      const minutes = Math.floor((diffSecondsTotal % 3600) / 60);
-      const seconds = diffSecondsTotal % 60;
+      const millisSinceEffectiveStart = now - effectiveCalculationStartTime;
       
-      setElapsedTime(
-        `${String(hours).padStart(2, '0')}:${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`
-      );
+      if (millisSinceEffectiveStart >= 0) {
+        const earningsThisSegment = (millisSinceEffectiveStart / (1000 * 60 * 60)) * hourlyWage;
+        newCurrentEarnings = baseEarnings + earningsThisSegment;
+      } else {
+         // This case implies timestampOfLastWageChange is in the future or something is off,
+         // or shiftStartTime itself is in the future. Fallback to baseEarnings or 0.
+        newCurrentEarnings = baseEarnings; 
+      }
+      setCurrentEarnings(newCurrentEarnings < 0 ? 0 : newCurrentEarnings); // Ensure earnings don't go negative
 
-      const earned = (diffMillis / (1000 * 60 * 60)) * hourlyWage;
-      setCurrentEarnings(earned);
-    }, 100); // Update 10 times per second for smoother visuals
+    }, 100); // Update 10 times per second
 
     // Initial calculation
-    const initialNow = Date.now();
-    const initialDiffMillis = initialNow - shiftStartTime;
-    if (initialDiffMillis >= 0) {
-      const initialEarned = (initialDiffMillis / (1000 * 60 * 60)) * hourlyWage;
-      setCurrentEarnings(initialEarned);
-      const initialDiffSecondsTotal = Math.floor(initialDiffMillis / 1000);
-      const initialHours = Math.floor(initialDiffSecondsTotal / 3600);
-      const initialMinutes = Math.floor((initialDiffSecondsTotal % 3600) / 60);
-      const initialSeconds = initialDiffSecondsTotal % 60;
-      setElapsedTime(
-        `${String(initialHours).padStart(2, '0')}:${String(initialMinutes).padStart(2, '0')}:${String(initialSeconds).padStart(2, '0')}`
-      );
-    }
+      const initialNow = Date.now();
+      let initialEarnedValue = 0;
+      const initialEffectiveCalcStartTime = timestampOfLastWageChange || shiftStartTime;
+      const initialBaseEarnings = timestampOfLastWageChange ? accumulatedEarningsAtLastChange : 0;
+
+      const initialMillisSinceEffectiveStart = initialNow - initialEffectiveCalcStartTime;
+      if (initialMillisSinceEffectiveStart >=0 ) {
+        const initialEarningsThisSegment = (initialMillisSinceEffectiveStart / (1000 * 60 * 60)) * hourlyWage;
+        initialEarnedValue = initialBaseEarnings + initialEarningsThisSegment;
+      } else {
+        initialEarnedValue = initialBaseEarnings;
+      }
+      setCurrentEarnings(initialEarnedValue < 0 ? 0 : initialEarnedValue);
+      
+      const initialTotalDiffMillis = initialNow - shiftStartTime;
+       if (initialTotalDiffMillis >=0) {
+        const initialDiffSecondsTotal = Math.floor(initialTotalDiffMillis / 1000);
+        const initialHours = Math.floor(initialDiffSecondsTotal / 3600);
+        const initialMinutes = Math.floor((initialDiffSecondsTotal % 3600) / 60);
+        const initialSeconds = initialDiffSecondsTotal % 60;
+        setElapsedTime(
+          `${String(initialHours).padStart(2, '0')}:${String(initialMinutes).padStart(2, '0')}:${String(initialSeconds).padStart(2, '0')}`
+        );
+       } else {
+         setElapsedTime("00:00:00");
+       }
 
 
     return () => clearInterval(intervalId);
-  }, [hourlyWage, shiftStartTime]);
+  }, [hourlyWage, shiftStartTime, accumulatedEarningsAtLastChange, timestampOfLastWageChange]);
 
   const formattedEarnings = currentEarnings.toLocaleString('en-US', {
     style: 'currency',
     currency: 'USD',
     minimumFractionDigits: 2, 
-    maximumFractionDigits: 2, // Changed from 4 to 2
+    maximumFractionDigits: 2,
   });
 
   return (
@@ -84,7 +116,7 @@ export function EarningsDisplay({ hourlyWage, shiftStartTime }: EarningsDisplayP
           className="text-5xl font-bold text-primary tracking-wider tabular-nums"
           aria-live="polite"
           aria-atomic="true"
-          style={{ transition: 'opacity 0.2s ease-in-out' }} // Simple transition for number change
+          style={{ transition: 'opacity 0.2s ease-in-out' }}
         >
           {formattedEarnings}
         </p>

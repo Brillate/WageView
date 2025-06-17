@@ -25,6 +25,8 @@ export default function WageViewPage() {
     clearLastShiftSummary,
     earningsGraphData,
     isLoading,
+    accumulatedEarningsAtLastChange,
+    timestampOfLastWageChange,
   } = useWageTracker();
 
   if (isLoading) {
@@ -59,7 +61,12 @@ export default function WageViewPage() {
           
           {isShiftActive && shiftStartTime && hourlyWage && hourlyWage > 0 && (
             <>
-              <EarningsDisplay hourlyWage={hourlyWage} shiftStartTime={shiftStartTime} />
+              <EarningsDisplay 
+                hourlyWage={hourlyWage} 
+                shiftStartTime={shiftStartTime} 
+                accumulatedEarningsAtLastChange={accumulatedEarningsAtLastChange}
+                timestampOfLastWageChange={timestampOfLastWageChange}
+              />
               <EarningsGraph data={earningsGraphData} /> 
             </>
           )}
