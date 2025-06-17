@@ -54,6 +54,7 @@ interface WageInputFormProps {
 
 export function WageInputForm({ initialAmount, initialPayPeriod, onWageConfigChange, disabled, effectiveHourlyWage }: WageInputFormProps) {
   const [isWageSet, setIsWageSet] = useState(!!effectiveHourlyWage && effectiveHourlyWage > 0);
+  const [isConfirming, setIsConfirming] = useState(false);
 
   const form = useForm<WageFormValues>({
     resolver: zodResolver(wageFormSchema),
@@ -71,9 +72,19 @@ export function WageInputForm({ initialAmount, initialPayPeriod, onWageConfigCha
     setIsWageSet(!!effectiveHourlyWage && effectiveHourlyWage > 0);
   }, [initialAmount, initialPayPeriod, effectiveHourlyWage, form]);
 
+  useEffect(() => {
+    if (isConfirming) {
+      const timer = setTimeout(() => {
+        setIsConfirming(false);
+      }, 2000);
+      return () => clearTimeout(timer);
+    }
+  }, [isConfirming]);
+
   function onSubmit(data: WageFormValues) {
     onWageConfigChange(data.amount, data.period as PayPeriod);
     setIsWageSet(true); 
+    setIsConfirming(true);
   }
   
   return (
@@ -103,7 +114,7 @@ export function WageInputForm({ initialAmount, initialPayPeriod, onWageConfigCha
                         step="0.01"
                         placeholder="e.g., 25.50"
                         {...field}
-                        disabled={disabled}
+                        disabled={disabled || isConfirming}
                         className={cn("text-lg", "no-spinners")}
                       />
                     </FormControl>
@@ -120,7 +131,7 @@ export function WageInputForm({ initialAmount, initialPayPeriod, onWageConfigCha
                     <Select
                       onValueChange={field.onChange}
                       defaultValue={field.value}
-                      disabled={disabled}
+                      disabled={disabled || isConfirming}
                     >
                       <FormControl>
                         <SelectTrigger id="period" className="text-lg">
@@ -141,8 +152,16 @@ export function WageInputForm({ initialAmount, initialPayPeriod, onWageConfigCha
               />
             </div>
             <div className="flex justify-center">
-              <Button type="submit" disabled={disabled || !form.formState.isValid} aria-label="Set Pay Configuration" className="w-full sm:w-auto">
-                {disabled ? "Locked" : (isWageSet ? "Update Pay" : "Set Pay")}
+              <Button 
+                type="submit" 
+                disabled={disabled || !form.formState.isDirty || !form.formState.isValid || isConfirming} 
+                aria-label="Set Pay Configuration" 
+                className="w-full sm:w-auto"
+              >
+                {disabled ? "Locked" : 
+                  isConfirming ? "Saved!" :
+                  (isWageSet ? "Update Pay" : "Set Pay")
+                }
               </Button>
             </div>
           </form>
@@ -151,6 +170,11 @@ export function WageInputForm({ initialAmount, initialPayPeriod, onWageConfigCha
           <p className="mt-4 text-sm text-green-400">
             Pay set: ${initialAmount.toFixed(2)} per {initialPayPeriod}. (Effective: ${effectiveHourlyWage.toFixed(2)}/hr). End current shift to change.
           </p>
+        )}
+         {!isWageSet && !disabled && !effectiveHourlyWage && (
+            <p className="mt-4 text-sm text-center text-muted-foreground">
+                Enter your pay and period to begin.
+            </p>
         )}
       </CardContent>
     </Card>
