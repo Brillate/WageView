@@ -80,7 +80,7 @@ const SelectContent = React.forwardRef<
         "data-[state=open]:animate-in data-[state=open]:fade-in-0",
         "data-[state=closed]:animate-out data-[state=closed]:fade-out-0",
         position === "popper" &&
-          "w-full min-w-[var(--radix-select-trigger-width)]", 
+          "min-w-[var(--radix-select-trigger-width)]",
         className
       )}
       position={position}
@@ -91,7 +91,7 @@ const SelectContent = React.forwardRef<
         className={cn(
           "p-1",
           position === "popper" &&
-            "w-full min-w-[var(--radix-select-trigger-width)]"
+            "min-w-[var(--radix-select-trigger-width)]"
         )}
       >
         {children}
