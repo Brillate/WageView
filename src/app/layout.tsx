@@ -11,7 +11,7 @@ const inter = Inter({
 });
 
 export const metadata: Metadata = {
-  title: 'RealTime WageView',
+  title: 'WageView',
   description: 'Visualize your income in real time.',
 };
 

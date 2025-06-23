@@ -92,7 +92,7 @@ export default function WageViewPage() {
         </main>
       </div>
       <footer className="py-4 text-center text-sm text-muted-foreground container mx-auto">
-        <p>&copy; {new Date().getFullYear()} RealTime WageView. All rights reserved.</p>
+        <p>&copy; {new Date().getFullYear()} WageView. All rights reserved.</p>
       </footer>
     </div>
   );

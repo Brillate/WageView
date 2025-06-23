@@ -11,7 +11,7 @@ export function AppHeader() {
         <div className="flex items-center space-x-3">
           <Briefcase className="h-10 w-10 text-primary" />
           <h1 className="text-4xl font-headline font-bold tracking-tight text-primary">
-            RealTime WageView
+            WageView
           </h1>
         </div>
         <p className="text-lg text-muted-foreground">
