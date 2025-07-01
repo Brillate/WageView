@@ -4,6 +4,8 @@ const nextConfig: NextConfig = {
   /* config options here */
   output: 'export',
   trailingSlash: true,
+  basePath: process.env.NODE_ENV === 'production' ? '/WageView' : '',
+  assetPrefix: process.env.NODE_ENV === 'production' ? '/WageView/' : '',
   images: {
     unoptimized: true,
     remotePatterns: [
