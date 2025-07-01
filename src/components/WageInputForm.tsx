@@ -58,7 +58,7 @@ export function WageInputForm({ initialAmount, initialPayPeriod, onWageConfigCha
   const form = useForm<WageFormValues>({
     resolver: zodResolver(wageFormSchema),
     defaultValues: {
-      amount: initialAmount || undefined,
+      amount: initialAmount || 0,
       period: initialPayPeriod || 'hourly',
     },
   });
@@ -66,6 +66,8 @@ export function WageInputForm({ initialAmount, initialPayPeriod, onWageConfigCha
   useEffect(() => {
     if (initialAmount !== null) {
       form.setValue("amount", initialAmount);
+    } else {
+      form.setValue("amount", 0);
     }
     form.setValue("period", initialPayPeriod || 'hourly');
     setIsWageSet(!!effectiveHourlyWage && effectiveHourlyWage > 0);
@@ -113,7 +115,11 @@ export function WageInputForm({ initialAmount, initialPayPeriod, onWageConfigCha
                         type="number"
                         step="0.01"
                         placeholder="e.g., 25.50"
-                        {...field}
+                        value={field.value === 0 ? '' : field.value}
+                        onChange={field.onChange}
+                        onBlur={field.onBlur}
+                        name={field.name}
+                        ref={field.ref}
                         disabled={isConfirming}
                         className={cn("text-lg", "no-spinners")}
                       />

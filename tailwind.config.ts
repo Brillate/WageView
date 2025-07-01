@@ -71,13 +71,7 @@ export default {
         md: 'calc(var(--radius) - 2px)',
         sm: 'calc(var(--radius) - 4px)',
       },
-      keyframes: {
-        // Custom keyframes removed as per simplification
-      },
-      animation: {
-        // Custom animations removed as per simplification
-      },
     },
   },
-  plugins: [require('tailwindcss-animate')],
+  plugins: [],
 } satisfies Config;
